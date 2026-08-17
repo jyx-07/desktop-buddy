@@ -1,14 +1,16 @@
 import { BrowserWindow, screen } from "electron";
 import path from "node:path";
 import { PUPPY_DISPLAY_BASE_HEIGHT, PUPPY_FRAME_SIZE } from "../../src/pets/puppy/puppy.meta";
+import { computeDisplaySize } from "../../src/types/pet";
 import type { PetConfig } from "../../src/types/pet";
 
 const isDev = process.env.NODE_ENV === "development";
 
 export function petWindowSize(scale: number) {
-  const height = Math.round(PUPPY_DISPLAY_BASE_HEIGHT * scale);
-  const width = Math.round(height * (PUPPY_FRAME_SIZE.width / PUPPY_FRAME_SIZE.height));
-  return { width, height };
+  return computeDisplaySize(
+    { frameSize: PUPPY_FRAME_SIZE, displayBaseHeight: PUPPY_DISPLAY_BASE_HEIGHT },
+    scale,
+  );
 }
 
 export function createPetWindow(config: PetConfig): BrowserWindow {

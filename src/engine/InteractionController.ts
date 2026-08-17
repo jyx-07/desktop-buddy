@@ -42,9 +42,10 @@ export class InteractionController {
       { state: "lookAround", weight: 10, durationMs: 1500 },
       { state: "play", weight: 10 + playfulness * 15, durationMs: 1800 },
     ];
-    const reactions = allReactions.filter(
-      (r) => !this.recentClickReactions.includes(r.state) || this.recentClickReactions.length < 2,
-    );
+    const unrepeated = allReactions.filter((r) => !this.recentClickReactions.includes(r.state));
+    // If every reaction was recently used (small reaction pool), fall back to
+    // the full list rather than reacting with nothing.
+    const reactions = unrepeated.length > 0 ? unrepeated : allReactions;
 
     const total = reactions.reduce((sum, r) => sum + r.weight, 0);
     let roll = Math.random() * total;

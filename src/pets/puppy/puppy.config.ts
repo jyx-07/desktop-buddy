@@ -1,6 +1,8 @@
 import type { AnimationDefinition, Direction, PetDefinition, PetState } from "../../types/pet";
+import { createDefaultPetConfig } from "../../config/PetConfig";
 import {
   PUPPY_DEFAULT_PERSONALITY,
+  PUPPY_DISPLAY_BASE_HEIGHT,
   PUPPY_FPS_BY_STATE,
   PUPPY_FRAME_SIZE,
   PUPPY_STATES,
@@ -13,11 +15,19 @@ const frameModules = import.meta.glob<string>("./assets/**/*.png", {
   import: "default",
 });
 
+/** Sorts "frame1.png".."frame12.png" numerically - plain string sort would
+ * put "frame10.png" before "frame2.png" once a state grows past 9 frames. */
+function byFrameNumber(a: string, b: string): number {
+  const numA = Number(a.match(/(\d+)(?=\.png$)/)?.[1] ?? 0);
+  const numB = Number(b.match(/(\d+)(?=\.png$)/)?.[1] ?? 0);
+  return numA - numB;
+}
+
 /** assets/<state>/frame*.png - for states with no direction-dependence. */
 function framesFor(state: PetState): string[] {
   return Object.keys(frameModules)
     .filter((key) => key.startsWith(`./assets/${state}/`) && !key.includes("/", `./assets/${state}/`.length))
-    .sort()
+    .sort(byFrameNumber)
     .map((key) => frameModules[key]);
 }
 
@@ -30,7 +40,7 @@ function framesByDirectionFor(state: "walk" | "run"): Partial<Record<Direction, 
     const prefix = `./assets/${state}/${dir}/`;
     const frames = Object.keys(frameModules)
       .filter((key) => key.startsWith(prefix))
-      .sort()
+      .sort(byFrameNumber)
       .map((key) => frameModules[key]);
     if (frames.length) result[dir] = frames;
   }
@@ -40,50 +50,46 @@ function framesByDirectionFor(state: "walk" | "run"): Partial<Record<Direction, 
 const WALK_FRAMES_BY_DIRECTION = framesByDirectionFor("walk");
 const RUN_FRAMES_BY_DIRECTION = framesByDirectionFor("run");
 
+// States that don't have dedicated art yet reuse an existing pose - just a
+// distinct entry in the state machine, not a real asset folder.
+const REUSED_STATE_FRAMES: Partial<Record<PetState, PetState>> = {
+  lookAtCursor: "sit",
+  lookAround: "sit",
+  petted: "happy",
+  dragged: "surprised",
+};
+
 const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
   name,
   // Fall back to the east-facing cycle so an unexpected direction never
   // renders blank.
-  frames: name === "walk" ? (WALK_FRAMES_BY_DIRECTION.E ?? []) : name === "run" ? (RUN_FRAMES_BY_DIRECTION.E ?? []) : framesFor(name),
+  frames:
+    name === "walk"
+      ? (WALK_FRAMES_BY_DIRECTION.E ?? [])
+      : name === "run"
+        ? (RUN_FRAMES_BY_DIRECTION.E ?? [])
+        : framesFor(name),
   fps: PUPPY_FPS_BY_STATE[name],
   loop: name !== "surprised",
   ...(name === "walk" ? { framesByDirection: WALK_FRAMES_BY_DIRECTION } : {}),
   ...(name === "run" ? { framesByDirection: RUN_FRAMES_BY_DIRECTION } : {}),
 }));
 
-// A few behavioral states reuse an existing pose - they don't need dedicated
-// art yet, just a distinct entry in the state machine.
-animations.push(
-  { name: "wake", frames: framesFor("sit"), fps: 1, loop: true },
-  { name: "lookAtCursor", frames: framesFor("sit"), fps: 1, loop: true },
-  { name: "lookAround", frames: framesFor("sit"), fps: 1, loop: true },
-  { name: "petted", frames: framesFor("happy"), fps: 1, loop: true },
-  { name: "dragged", frames: framesFor("surprised"), fps: 1, loop: true },
-);
+for (const [state, reuseFrom] of Object.entries(REUSED_STATE_FRAMES) as [PetState, PetState][]) {
+  animations.push({ name: state, frames: framesFor(reuseFrom), fps: 1, loop: true });
+}
+
+// PetConfig.ts's createDefaultPetConfig() is the one source of truth for
+// default settings - reuse it here instead of maintaining a second,
+// silently-divergent copy of the same defaults.
+const { personality: _personality, petId: _petId, name: _name, ...defaultConfigRest } = createDefaultPetConfig();
 
 export const PUPPY_DEFINITION: PetDefinition = {
   id: "puppy",
   displayName: "강아지",
   animations,
   frameSize: PUPPY_FRAME_SIZE,
+  displayBaseHeight: PUPPY_DISPLAY_BASE_HEIGHT,
   defaultPersonality: PUPPY_DEFAULT_PERSONALITY,
-  defaultConfig: {
-    appearance: { type: "puppy", scale: 1 },
-    position: { x: 200, y: 200 },
-    behavior: {
-      walking: true,
-      running: true,
-      sitting: true,
-      sleeping: true,
-      yawning: true,
-      lookAtCursor: true,
-      followCursor: false,
-      suddenDash: true,
-      cursorInteraction: true,
-      dragging: true,
-    },
-    activityLevel: 0.5,
-    moveSpeed: 1,
-    rules: [],
-  },
+  defaultConfig: defaultConfigRest,
 };

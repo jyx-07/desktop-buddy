@@ -17,6 +17,7 @@ export class RuleEngine {
   private behavior: BehaviorController;
   private movement: MovementEngine;
   private firedThisMinute = new Set<string>();
+  private lastMinuteKey = "";
 
   constructor(config: PetConfig, behavior: BehaviorController, movement: MovementEngine) {
     this.config = config;
@@ -29,14 +30,21 @@ export class RuleEngine {
   }
 
   evaluate(ctx: TickContext) {
+    // Only "this minute"'s keys are ever useful for de-duplication - drop
+    // the rest instead of growing forever on an app that stays open for days.
+    const minuteKey = `${ctx.timeOfDay.hour}:${ctx.timeOfDay.minute}`;
+    if (minuteKey !== this.lastMinuteKey) {
+      this.lastMinuteKey = minuteKey;
+      this.firedThisMinute.clear();
+    }
+
     for (const rule of this.config.rules) {
       if (!rule.enabled) continue;
       if (!this.matches(rule.trigger, ctx)) continue;
 
       if (rule.trigger.type === "timeOfDay") {
-        const fireKey = `${rule.id}:${ctx.timeOfDay.hour}:${ctx.timeOfDay.minute}`;
-        if (this.firedThisMinute.has(fireKey)) continue;
-        this.firedThisMinute.add(fireKey);
+        if (this.firedThisMinute.has(rule.id)) continue;
+        this.firedThisMinute.add(rule.id);
       }
 
       this.apply(rule.action, ctx);

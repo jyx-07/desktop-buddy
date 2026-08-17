@@ -109,4 +109,19 @@ export interface PetDefinition {
   };
   /** Native pixel size of one animation frame at scale = 1. */
   frameSize: { width: number; height: number };
+  /** On-screen height (px) at scale = 1 - the asset canvas isn't native 1x
+   * pixel-art resolution, so display size scales off this instead of frameSize. */
+  displayBaseHeight: number;
+}
+
+/** The pet's real on-screen size at a given scale - shared by window sizing
+ * (main process) and movement bounds (engine), so the walkable area always
+ * matches the actual window instead of the raw asset canvas dimensions. */
+export function computeDisplaySize(
+  definition: Pick<PetDefinition, "frameSize" | "displayBaseHeight">,
+  scale: number,
+): { width: number; height: number } {
+  const height = Math.round(definition.displayBaseHeight * scale);
+  const width = Math.round(height * (definition.frameSize.width / definition.frameSize.height));
+  return { width, height };
 }

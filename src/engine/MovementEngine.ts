@@ -13,7 +13,8 @@ const BASE_RUN_SPEED = 170; // px/sec at speedMultiplier = 1
 const ARRIVAL_THRESHOLD = 6; // px - close enough to the target to stop
 const DECEL_RADIUS = 50; // px - starts easing speed down within this distance
 const ACCEL_PER_SEC = 6; // how quickly velocity chases the desired velocity (higher = snappier)
-const FACING_CHANGE_COOLDOWN_MS = 120; // avoids flickering between adjacent 45deg sectors
+const FACING_CHANGE_COOLDOWN_MS = 350; // avoids flickering between adjacent 45deg sectors
+const FACING_CHANGE_MIN_SPEED = 20; // px/sec - ignore the noisy, low-confidence direction during accel/decel ramps
 
 const DIRECTION_ORDER: Direction[] = ["E", "SE", "S", "SW", "W", "NW", "N", "NE"];
 const DIRECTION_ANGLE_DEG: Record<Direction, number> = {
@@ -69,6 +70,12 @@ export class MovementEngine {
 
   setBounds(bounds: WorkArea) {
     this.bounds = bounds;
+  }
+
+  /** Called when the user changes the size slider - keeps the walkable
+   * area matching the window's actual (now-resized) footprint. */
+  setFrameSize(frameSize: { width: number; height: number }) {
+    this.frameSize = frameSize;
   }
 
   setSpeedMultiplier(multiplier: number) {
@@ -215,7 +222,7 @@ export class MovementEngine {
     this.y = this.clampY(this.y + this.velocity.y * dtSec);
 
     const speed = Math.hypot(this.velocity.x, this.velocity.y);
-    if (speed > 2 && this.elapsedMs - this.lastFacingChangeMs > FACING_CHANGE_COOLDOWN_MS) {
+    if (speed > FACING_CHANGE_MIN_SPEED && this.elapsedMs - this.lastFacingChangeMs > FACING_CHANGE_COOLDOWN_MS) {
       const nextFacing = directionFromVector(this.velocity.x, this.velocity.y);
       if (nextFacing !== this.facing) {
         this.updateFacing(nextFacing);

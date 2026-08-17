@@ -1,5 +1,6 @@
 import type { WorkArea } from "../shared/ipc";
 import type { Direction, PetConfig, PetDefinition, PetState } from "../types/pet";
+import { computeDisplaySize } from "../types/pet";
 import { AnimationPlayer } from "./AnimationPlayer";
 import { BehaviorController } from "./BehaviorController";
 import { directionFromVector, MovementEngine } from "./MovementEngine";
@@ -33,10 +34,20 @@ export class PetEngine {
   private drag = new DragController();
   private paused = false;
   private draggingEnabled = true;
+  private definition: PetDefinition;
 
   constructor(definition: PetDefinition, config: PetConfig, bounds: WorkArea) {
+    this.definition = definition;
     this.animation = new AnimationPlayer(definition.animations, "idle");
-    this.movement = new MovementEngine(config.position, bounds, definition.frameSize);
+    const displaySize = computeDisplaySize(definition, config.appearance.scale);
+    // Spawn grounded, matching exactly how createPetWindow.ts places the
+    // window itself - otherwise the first tick's position report snaps the
+    // window from the floor up to config.position's raw (x, y) on launch.
+    const initialPosition = {
+      x: config.position.x,
+      y: bounds.y + bounds.height - displaySize.height,
+    };
+    this.movement = new MovementEngine(initialPosition, bounds, displaySize);
     this.movement.setSpeedMultiplier(config.moveSpeed);
     this.behavior = new BehaviorController(config);
     this.interaction = new InteractionController(config, this.behavior);
@@ -67,6 +78,7 @@ export class PetEngine {
     this.interaction.updateConfig(config);
     this.rules.updateConfig(config);
     this.movement.setSpeedMultiplier(config.moveSpeed);
+    this.movement.setFrameSize(computeDisplaySize(this.definition, config.appearance.scale));
     this.draggingEnabled = config.behavior.dragging;
   }
 
@@ -79,13 +91,14 @@ export class PetEngine {
   }
 
   handleClick() {
+    if (this.paused) return;
     this.interaction.handleClick();
   }
 
   // --- Drag gesture entry points, called from PetRenderer's pointer handlers ---
 
   handlePointerDown(screenX: number, screenY: number) {
-    if (!this.draggingEnabled) return;
+    if (!this.draggingEnabled || this.paused) return;
     const pos = this.movement.getPosition();
     this.drag.pointerDown(screenX, screenY, pos.x, pos.y);
   }
@@ -93,7 +106,7 @@ export class PetEngine {
   /** @returns the new window position to apply immediately (skip waiting for
    * the next animation frame so dragging never feels a beat behind the cursor) */
   handlePointerMove(screenX: number, screenY: number): { x: number; y: number } | undefined {
-    if (!this.draggingEnabled) return undefined;
+    if (!this.draggingEnabled || this.paused) return undefined;
     const result = this.drag.pointerMove(screenX, screenY);
     if (result.type !== "drag-move") return undefined;
 
@@ -110,6 +123,7 @@ export class PetEngine {
   /** @returns true if this pointer-up ended a drag (vs. a plain click) */
   handlePointerUp(): boolean {
     const result = this.drag.pointerUp();
+    if (this.paused) return false;
     if (result.type === "click") {
       this.interaction.handleClick();
       return false;
