@@ -6,7 +6,7 @@ import type { PetState, Personality } from "../../types/pet";
 
 // Shared canvas every sliced frame (poses + 8-direction sprites) was placed
 // on, bottom-anchored - see scripts used to build src/pets/puppy/assets/.
-export const PUPPY_FRAME_SIZE = { width: 425, height: 413 };
+export const PUPPY_FRAME_SIZE = { width: 306, height: 267 };
 
 // The sliced sprite art isn't native 1x pixel-art grid resolution (it came
 // from a raster reference sheet), so "scale" multiplies this display height
@@ -15,7 +15,7 @@ export const PUPPY_FRAME_SIZE = { width: 425, height: 413 };
 export const PUPPY_DISPLAY_BASE_HEIGHT = 110;
 
 export const PUPPY_FPS_BY_STATE: Record<PetState, number> = {
-  idle: 4,
+  idle: 1,
   walk: 6,
   run: 10,
   sit: 1,
