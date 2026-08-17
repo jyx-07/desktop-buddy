@@ -1,0 +1,61 @@
+{
+  "name": "macos-desktop-pet",
+  "version": "0.1.0",
+  "description": "A cute pixel-art desktop pet that lives on your macOS desktop",
+  "main": "dist-electron/electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev:renderer": "vite",
+    "dev:electron:stub": "mkdir -p dist-electron && echo '{\"type\":\"commonjs\"}' > dist-electron/package.json",
+    "dev:electron:build": "npm run dev:electron:stub && tsc -p tsconfig.electron.json --watch --preserveWatchOutput",
+    "dev": "concurrently -k -n RENDERER,ELECTRON-BUILD,ELECTRON -c cyan,yellow,green \"npm:dev:renderer\" \"npm:dev:electron:build\" \"npm run wait-and-electron\"",
+    "wait-and-electron": "wait-on tcp:5173 dist-electron/electron/main.js && cross-env NODE_ENV=development electron .",
+    "build:renderer": "vite build",
+    "build:electron": "tsc -p tsconfig.electron.json && npm run dev:electron:stub",
+    "build": "npm run build:renderer && npm run build:electron",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.electron.json",
+    "package": "npm run build && electron-builder --mac --dir",
+    "package:zip": "npm run build && electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.macospet.puppy",
+    "productName": "My Puppy",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "assets/icons/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "assets/icons"
+    },
+    "mac": {
+      "icon": "assets/icons/app-icon.icns",
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "zip",
+          "arch": ["arm64"]
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.13",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^43.4.0",
+    "electron-builder": "^24.13.3",
+    "typescript": "^5.5.4",
+    "vite": "^5.3.5",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
