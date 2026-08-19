@@ -89,6 +89,10 @@ export class InteractionController {
     }
 
     if (!this.config.behavior.lookAtCursor) return;
+    // Only steal a glance while the pet is otherwise doing nothing - forcing
+    // this mid-sleep (or mid-walk/run/play) cut those states short and read
+    // as "lies down, then instantly pops back up."
+    if (this.behavior.getState() !== "idle") return;
     const idleMs = nowMs - this.lastCursorMoveAt;
     const cooldownOk = nowMs - this.lastLookAt > LOOK_COOLDOWN_MS;
     if (idleMs > CURSOR_IDLE_LOOK_THRESHOLD_MS && cooldownOk) {
