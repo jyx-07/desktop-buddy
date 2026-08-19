@@ -7,6 +7,20 @@ import { directionFromVector, MovementEngine } from "./MovementEngine";
 import { InteractionController } from "./InteractionController";
 import { RuleEngine } from "./RuleEngine";
 import { DragController } from "./DragController";
+import { SpeechController } from "./SpeechController";
+
+// Speech lines for behavior states the pet enters on its own (not from a
+// click/drag reaction, which pick their own line in InteractionController) -
+// rolled at a chance each time so the pet doesn't narrate every single move.
+const AUTONOMOUS_PHRASES: Partial<Record<PetState, string[]>> = {
+  wake: ["잘 잤다~", "몸이 개운해!"],
+  play: ["심심해!", "놀고 싶다~"],
+  lookAround: ["음?", "뭐지?", "어디 갔지?"],
+  run: ["신난다!", "가자가자!"],
+  sleep: ["졸려... zzz", "잠깐 잘게"],
+};
+const AUTONOMOUS_SPEECH_CHANCE = 0.35;
+const AUTONOMOUS_SPEECH_DURATION_MS = 2000;
 
 export interface PetSnapshot {
   x: number;
@@ -20,6 +34,8 @@ export interface PetSnapshot {
   isDragging: boolean;
   /** Render-time size correction for the current pose (1 = none). */
   scale: number;
+  /** Current speech-bubble text, or null when the pet isn't saying anything. */
+  speechText: string | null;
 }
 
 /**
@@ -34,6 +50,7 @@ export class PetEngine {
   private interaction: InteractionController;
   private rules: RuleEngine;
   private drag = new DragController();
+  private speech = new SpeechController();
   private paused = false;
   private draggingEnabled = true;
 
@@ -50,7 +67,7 @@ export class PetEngine {
     this.movement = new MovementEngine(initialPosition, bounds, displaySize);
     this.movement.setSpeedMultiplier(config.moveSpeed);
     this.behavior = new BehaviorController(config);
-    this.interaction = new InteractionController(config, this.behavior);
+    this.interaction = new InteractionController(config, this.behavior, this.speech);
     this.rules = new RuleEngine(config, this.behavior, this.movement);
     this.draggingEnabled = config.behavior.dragging;
 
@@ -59,6 +76,7 @@ export class PetEngine {
 
   private applyBehaviorState(state: PetState) {
     this.animation.play(state);
+    this.maybeSayAutonomousLine(state);
     switch (state) {
       case "walk":
         this.movement.wanderWalk();
@@ -71,6 +89,14 @@ export class PetEngine {
       default:
         this.movement.stop();
     }
+  }
+
+  private maybeSayAutonomousLine(state: PetState) {
+    const pool = AUTONOMOUS_PHRASES[state];
+    if (!pool || pool.length === 0) return;
+    if (Math.random() >= AUTONOMOUS_SPEECH_CHANCE) return;
+    const phrase = pool[Math.floor(Math.random() * pool.length)];
+    this.speech.say(phrase, AUTONOMOUS_SPEECH_DURATION_MS);
   }
 
   setConfig(config: PetConfig) {
@@ -145,6 +171,8 @@ export class PetEngine {
   }
 
   update(dtMs: number): PetSnapshot {
+    this.speech.update(dtMs);
+
     if (this.drag.isDragging) {
       const pos = this.movement.getPosition();
       const facing = this.movement.getFacing();
@@ -159,6 +187,7 @@ export class PetEngine {
         state: this.animation.state,
         isDragging: true,
         scale: this.animation.getCurrentScale(),
+        speechText: this.speech.current,
       };
     }
 
@@ -177,6 +206,7 @@ export class PetEngine {
         state: this.animation.state,
         isDragging: false,
         scale: this.animation.getCurrentScale(),
+        speechText: this.speech.current,
       };
     }
 
@@ -190,6 +220,7 @@ export class PetEngine {
       state: this.animation.state,
       isDragging: false,
       scale: this.animation.getCurrentScale(),
+      speechText: this.speech.current,
     };
   }
 }

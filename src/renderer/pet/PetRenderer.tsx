@@ -7,7 +7,9 @@ export function PetRenderer() {
   const engineRef = useRef<PetEngine | null>(null);
   const canvasRef = useRef<PetCanvasHandle>(null);
   const [ready, setReady] = useState(false);
+  const [speech, setSpeech] = useState<string | null>(null);
   const lastSent = useRef({ x: NaN, y: NaN });
+  const lastSpeech = useRef<string | null>(null);
 
   useEffect(() => {
     let disposed = false;
@@ -41,6 +43,11 @@ export function PetRenderer() {
 
         const snapshot = engine.update(dt);
         canvasRef.current?.applyFrame(snapshot.frameSrc, snapshot.state, snapshot.horizontalBias, snapshot.scale);
+
+        if (snapshot.speechText !== lastSpeech.current) {
+          lastSpeech.current = snapshot.speechText;
+          setSpeech(snapshot.speechText);
+        }
 
         if (snapshot.x !== lastSent.current.x || snapshot.y !== lastSent.current.y) {
           lastSent.current = { x: snapshot.x, y: snapshot.y };
@@ -94,15 +101,18 @@ export function PetRenderer() {
   if (!ready) return null;
 
   return (
-    <PetCanvas
-      ref={canvasRef}
-      onPointerDown={handlePointerDown}
-      onMouseEnter={() => window.petAPI.setIgnoreMouseEvents(false)}
-      onMouseLeave={() => {
-        // Don't let a fast drag re-enable click-through just because the
-        // cursor slipped off the sprite for a frame.
-        if (!engineRef.current?.isDragging) window.petAPI.setIgnoreMouseEvents(true);
-      }}
-    />
+    <>
+      {speech && <div className="speech-bubble">{speech}</div>}
+      <PetCanvas
+        ref={canvasRef}
+        onPointerDown={handlePointerDown}
+        onMouseEnter={() => window.petAPI.setIgnoreMouseEvents(false)}
+        onMouseLeave={() => {
+          // Don't let a fast drag re-enable click-through just because the
+          // cursor slipped off the sprite for a frame.
+          if (!engineRef.current?.isDragging) window.petAPI.setIgnoreMouseEvents(true);
+        }}
+      />
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { ipcMain, screen, type BrowserWindow } from "electron";
 import { IpcChannel } from "../../src/shared/ipc";
 import type { ConfigStore } from "../../src/config/ConfigStore";
+import { SPEECH_HEADROOM_PX } from "../windows/createPetWindow";
 
 interface IpcDeps {
   configStore: ConfigStore;
@@ -16,7 +17,10 @@ export function registerIpcHandlers({ configStore, getPetWindow, getSettingsWind
   ipcMain.handle(IpcChannel.GetWorkArea, () => screen.getPrimaryDisplay().workArea);
 
   ipcMain.on(IpcChannel.PetSetPosition, (_event, { x, y }: { x: number; y: number }) => {
-    getPetWindow()?.setPosition(Math.round(x), Math.round(y));
+    // (x, y) is the sprite's own top-left (movement/IPC coordinate space);
+    // the actual window is taller and shifted up to leave room for a speech
+    // bubble above the sprite - see SPEECH_HEADROOM_PX.
+    getPetWindow()?.setPosition(Math.round(x), Math.round(y - SPEECH_HEADROOM_PX));
   });
 
   ipcMain.on(IpcChannel.PetSetIgnoreMouseEvents, (_event, ignore: boolean) => {

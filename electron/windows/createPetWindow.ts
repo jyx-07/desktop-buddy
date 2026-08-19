@@ -6,6 +6,14 @@ import type { PetConfig } from "../../src/types/pet";
 
 const isDev = process.env.NODE_ENV === "development";
 
+// Extra transparent space reserved above the sprite's own bounding box, so a
+// speech bubble has somewhere to render without needing to resize the window
+// every time one pops up. Purely a window-chrome concern - the pet's own
+// logical position/frameSize (movement bounds, IPC) stays sprite-sized;
+// only the actual BrowserWindow is taller/shifted up by this amount (see
+// SPEECH_HEADROOM_PX usage in electron/ipc/index.ts for the position offset).
+export const SPEECH_HEADROOM_PX = 48;
+
 export function petWindowSize() {
   return computeDisplaySize({
     frameSize: PUPPY_FRAME_SIZE,
@@ -19,9 +27,9 @@ export function createPetWindow(config: PetConfig): BrowserWindow {
 
   const win = new BrowserWindow({
     width,
-    height,
+    height: height + SPEECH_HEADROOM_PX,
     x: Math.round(config.position.x),
-    y: workArea.y + workArea.height - height,
+    y: workArea.y + workArea.height - height - SPEECH_HEADROOM_PX,
     frame: false,
     transparent: true,
     hasShadow: false,

@@ -1,4 +1,5 @@
 import type { BehaviorController } from "./BehaviorController";
+import type { SpeechController } from "./SpeechController";
 import type { PetConfig, PetState } from "../types/pet";
 
 const CURSOR_IDLE_LOOK_THRESHOLD_MS = 10000;
@@ -10,18 +11,37 @@ interface ClickReaction {
   durationMs: number;
 }
 
+// Short speech-bubble lines per reaction state - picked at random so the
+// same click doesn't always say the same thing.
+const REACTION_PHRASES: Partial<Record<PetState, string[]>> = {
+  surprised: ["앗!", "깜짝이야!", "엥?!"],
+  happy: ["좋아!", "히히", "신난다!"],
+  petted: ["음~ 좋다", "더 만져줘", "기분 좋아"],
+  sit: ["네!", "여기 앉을래"],
+  lookAround: ["음?", "뭐지?"],
+  play: ["같이 놀자!", "재밌다!"],
+};
+
+function pickPhrase(state: PetState): string | undefined {
+  const pool = REACTION_PHRASES[state];
+  if (!pool || pool.length === 0) return undefined;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 /** "How does the pet respond to the user" - clicks, petting, dragging, cursor attention. */
 export class InteractionController {
   private config: PetConfig;
   private behavior: BehaviorController;
+  private speech: SpeechController;
   private lastCursor: { x: number; y: number } | null = null;
   private lastCursorMoveAt = 0;
   private lastLookAt = -Infinity;
   private recentClickReactions: PetState[] = [];
 
-  constructor(config: PetConfig, behavior: BehaviorController) {
+  constructor(config: PetConfig, behavior: BehaviorController, speech: SpeechController) {
     this.config = config;
     this.behavior = behavior;
+    this.speech = speech;
   }
 
   updateConfig(config: PetConfig) {
@@ -62,6 +82,8 @@ export class InteractionController {
     if (this.recentClickReactions.length > 2) this.recentClickReactions.shift();
 
     this.behavior.forceState(chosen.state, chosen.durationMs);
+    const phrase = pickPhrase(chosen.state);
+    if (phrase) this.speech.say(phrase, chosen.durationMs);
     setTimeout(() => this.behavior.forceState("idle", 400), chosen.durationMs);
   }
 
@@ -72,9 +94,13 @@ export class InteractionController {
 
     if (goesHappy) {
       this.behavior.forceState("happy", 900);
+      const phrase = pickPhrase("happy");
+      if (phrase) this.speech.say(phrase, 900);
       setTimeout(() => this.behavior.forceState("idle", 300 + energy * 400), 900);
     } else {
       this.behavior.forceState("surprised", 500);
+      const phrase = pickPhrase("surprised");
+      if (phrase) this.speech.say(phrase, 500);
       setTimeout(() => this.behavior.forceState("lookAround", 1200), 500);
       setTimeout(() => this.behavior.forceState("idle", 300), 1700);
     }
