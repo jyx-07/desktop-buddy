@@ -31,10 +31,13 @@ function framesFor(state: PetState): string[] {
     .map((key) => frameModules[key]);
 }
 
-/** 1,2,3..n,n-1..2 - plays a cycle forward then back instead of snapping
- * from the last frame straight to the first. */
+/** 1,2,3..n,n-1..2 - plays a cycle forward then back, then loops straight
+ * into the next forward pass with no held frame at the seam. Excludes both
+ * endpoints from the return leg: not just the last frame (shared with the
+ * turnaround) but also the first (shared with the next lap's start) - since
+ * this loops, keeping either produced a visible double-hold pause there. */
 function pingPong<T>(items: T[]): T[] {
-  return [...items, ...items.slice(0, -1).reverse()];
+  return [...items, ...items.slice(1, -1).reverse()];
 }
 
 const DIRECTIONS: Direction[] = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
