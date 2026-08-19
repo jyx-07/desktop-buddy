@@ -11,6 +11,7 @@ const FALLBACK_DECISION_MS = 2500;
 const POST_ARRIVAL_PAUSE_MS = 250;
 const PRE_SLEEP_SETTLE_MS = 900;
 const WAKE_BEAT_MS = 1200;
+const ACTION_GAP_MS = 1500;
 
 /** "What should the pet be doing right now" - a lightweight weighted state machine. */
 export class BehaviorController {
@@ -89,6 +90,15 @@ export class BehaviorController {
       }
     }
 
+    if (this.current !== "idle") {
+      // Breathing room between one burst of activity and the next, instead
+      // of chaining straight from one action (play, lookAround, ...) into
+      // another back-to-back.
+      this.setState("idle", ACTION_GAP_MS, true);
+      this.pendingChain = () => this.rollNextBehavior();
+      return;
+    }
+
     this.rollNextBehavior();
   }
 
@@ -97,7 +107,7 @@ export class BehaviorController {
     if (decision.state === "sleep") {
       // Settle first - going from mid-stride straight into a curled-up sleep
       // pose reads as a glitch, not "getting sleepy."
-      this.setState("sit", PRE_SLEEP_SETTLE_MS, true);
+      this.setState("idle", PRE_SLEEP_SETTLE_MS, true);
       this.pendingChain = () => this.setState("sleep", decision.durationMs);
       return;
     }

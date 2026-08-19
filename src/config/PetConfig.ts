@@ -20,9 +20,9 @@ export function createDefaultPetConfig(): PetConfig {
       playfulness: 0.6,
     },
     behavior: {
-      walking: true,
+      walking: false,
       running: true,
-      sitting: true,
+      sitting: false,
       sleeping: true,
       yawning: true,
       lookAtCursor: true,

@@ -53,8 +53,8 @@ const RUN_FRAMES_BY_DIRECTION = framesByDirectionFor("run");
 // States that don't have dedicated art yet reuse an existing pose - just a
 // distinct entry in the state machine, not a real asset folder.
 const REUSED_STATE_FRAMES: Partial<Record<PetState, PetState>> = {
-  lookAtCursor: "sit",
-  lookAround: "sit",
+  lookAtCursor: "idle",
+  lookAround: "idle",
   petted: "happy",
   dragged: "surprised",
 };
