@@ -147,7 +147,7 @@ export class BehaviorController {
       options.push({
         state: "sleep",
         weight: personality.sleepiness * 5,
-        duration: [240000, 300000], // a real nap (4-5 min), not a blink-and-it's-over doze
+        duration: [900000, 1200000], // a proper long nap (15-20 min) - only a mouse click/drag should cut it short
       });
     }
     if (personality.playfulness > 0.5) {
