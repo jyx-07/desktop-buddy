@@ -20,7 +20,16 @@ export function registerIpcHandlers({ configStore, getPetWindow, getSettingsWind
     // (x, y) is the sprite's own top-left (movement/IPC coordinate space);
     // the actual window is taller and shifted up to leave room for a speech
     // bubble above the sprite - see SPEECH_HEADROOM_PX.
-    getPetWindow()?.setPosition(Math.round(x), Math.round(y - SPEECH_HEADROOM_PX));
+    const targetX = Math.round(x);
+    const targetY = Math.round(y - SPEECH_HEADROOM_PX);
+    // BrowserWindow.setPosition throws a native TypeError on NaN/Infinity -
+    // crashing the whole app with an ugly dialog instead of just dropping
+    // the one bad update. Guard rather than chase every possible NaN source.
+    if (!Number.isFinite(targetX) || !Number.isFinite(targetY)) {
+      console.error("[ipc] dropped non-finite pet position", { x, y });
+      return;
+    }
+    getPetWindow()?.setPosition(targetX, targetY);
   });
 
   ipcMain.on(IpcChannel.PetSetIgnoreMouseEvents, (_event, ignore: boolean) => {
