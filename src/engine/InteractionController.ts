@@ -4,6 +4,7 @@ import type { PetConfig, PetState } from "../types/pet";
 
 const CURSOR_IDLE_LOOK_THRESHOLD_MS = 10000;
 const LOOK_COOLDOWN_MS = 15000;
+const MAX_SPEECH_DURATION_MS = 4000;
 
 interface ClickReaction {
   state: PetState;
@@ -19,7 +20,7 @@ const REACTION_PHRASES: Partial<Record<PetState, string[]>> = {
   petted: ["음~ 좋다", "더 만져줘", "기분 좋아"],
   sit: ["네!", "여기 앉을래"],
   lookAround: ["음?", "뭐지?"],
-  play: ["같이 놀자!", "재밌다!"],
+  play: ["같이 놀자!", "놀자!", "재밌다!"],
 };
 
 function pickPhrase(state: PetState): string | undefined {
@@ -60,7 +61,7 @@ export class InteractionController {
       { state: "petted", weight: 15 + friendliness * 15, durationMs: 1400 },
       { state: "sit", weight: 15, durationMs: 2000 },
       { state: "lookAround", weight: 10, durationMs: 1500 },
-      { state: "play", weight: 10 + playfulness * 15, durationMs: 1800 },
+      { state: "play", weight: 10 + playfulness * 15, durationMs: 12000 }, // several loops of the play animation cycle
     ];
     const unrepeated = allReactions.filter((r) => !this.recentClickReactions.includes(r.state));
     // If every reaction was recently used (small reaction pool), fall back to
@@ -83,7 +84,9 @@ export class InteractionController {
 
     this.behavior.forceState(chosen.state, chosen.durationMs);
     const phrase = pickPhrase(chosen.state);
-    if (phrase) this.speech.say(phrase, chosen.durationMs);
+    // Say it for a quick beat, not the reaction's full duration - a bubble
+    // shouldn't sit on screen for the entire ~12s play session.
+    if (phrase) this.speech.say(phrase, Math.min(chosen.durationMs, MAX_SPEECH_DURATION_MS));
     setTimeout(() => this.behavior.forceState("idle", 400), chosen.durationMs);
   }
 

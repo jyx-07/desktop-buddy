@@ -154,7 +154,7 @@ export class BehaviorController {
       options.push({
         state: "play",
         weight: personality.playfulness * personality.energy * 2,
-        duration: [1500, 2500],
+        duration: [10000, 14000], // several loops of the ~4s play animation cycle (1..6..1)
       });
     }
 

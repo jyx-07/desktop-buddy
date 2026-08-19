@@ -14,13 +14,18 @@ import { SpeechController } from "./SpeechController";
 // rolled at a chance each time so the pet doesn't narrate every single move.
 const AUTONOMOUS_PHRASES: Partial<Record<PetState, string[]>> = {
   wake: ["잘 잤다~", "몸이 개운해!"],
-  play: ["심심해!", "놀고 싶다~"],
+  play: ["심심해!", "놀고 싶다~", "놀자!"],
   lookAround: ["음?", "뭐지?", "어디 갔지?"],
   run: ["신난다!", "가자가자!"],
   sleep: ["졸려... zzz", "잠깐 잘게"],
 };
 const AUTONOMOUS_SPEECH_CHANCE = 0.35;
 const AUTONOMOUS_SPEECH_DURATION_MS = 2000;
+// play's speech bubble should last through its whole ~4s animation cycle,
+// not just the default beat other autonomous lines get.
+const AUTONOMOUS_SPEECH_DURATION_OVERRIDE: Partial<Record<PetState, number>> = {
+  play: 4000,
+};
 
 export interface PetSnapshot {
   x: number;
@@ -95,7 +100,7 @@ export class PetEngine {
     if (!pool || pool.length === 0) return;
     if (Math.random() >= AUTONOMOUS_SPEECH_CHANCE) return;
     const phrase = pool[Math.floor(Math.random() * pool.length)];
-    this.speech.say(phrase, AUTONOMOUS_SPEECH_DURATION_MS);
+    this.speech.say(phrase, AUTONOMOUS_SPEECH_DURATION_OVERRIDE[state] ?? AUTONOMOUS_SPEECH_DURATION_MS);
   }
 
   setConfig(config: PetConfig) {

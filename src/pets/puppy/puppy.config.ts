@@ -31,6 +31,12 @@ function framesFor(state: PetState): string[] {
     .map((key) => frameModules[key]);
 }
 
+/** 1,2,3..n,n-1..2 - plays a cycle forward then back instead of snapping
+ * from the last frame straight to the first. */
+function pingPong(frames: string[]): string[] {
+  return [...frames, ...frames.slice(0, -1).reverse()];
+}
+
 const DIRECTIONS: Direction[] = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 
 /** assets/<state>/<direction>/frame*.png - each direction has its own real gait cycle. */
@@ -72,7 +78,6 @@ const STATE_SCALE: Partial<Record<PetState, number>> = {
   idle: 0.96,
   wake: 0.96,
   happy: 1.15,
-  play: 1.28,
 };
 
 const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
@@ -84,7 +89,9 @@ const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
       ? (WALK_FRAMES_BY_DIRECTION.E ?? [])
       : name === "run"
         ? (RUN_FRAMES_BY_DIRECTION.E ?? [])
-        : framesFor(name),
+        : name === "play"
+          ? pingPong(framesFor(name))
+          : framesFor(name),
   fps: PUPPY_FPS_BY_STATE[name],
   loop: name !== "surprised",
   ...(STATE_SCALE[name] !== undefined ? { scale: STATE_SCALE[name] } : {}),
