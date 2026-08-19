@@ -12,6 +12,15 @@ let paused = false;
 // Menu-bar/desktop-overlay app - no Dock icon, no app menu window.
 app.dock?.hide();
 
+// Last-resort net: an uncaught exception anywhere in the main process would
+// otherwise show Electron's "A JavaScript error occurred" dialog and often
+// take the whole tray-resident app down over one bad tick. Log and keep
+// running instead - this is a background pet, not something that should
+// ever surface a crash dialog to the user.
+process.on("uncaughtException", (err) => {
+  console.error("[main] uncaught exception - continuing", err);
+});
+
 app.whenReady().then(() => {
   const configStore = new ConfigStore(app.getPath("userData"));
 

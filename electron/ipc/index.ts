@@ -22,23 +22,23 @@ export function registerIpcHandlers({ configStore, getPetWindow, getSettingsWind
     // bubble above the sprite - see SPEECH_HEADROOM_PX.
     const targetX = Math.round(x);
     const targetY = Math.round(y - SPEECH_HEADROOM_PX);
-    // BrowserWindow.setPosition throws a native TypeError on NaN/Infinity -
-    // AND on merely huge-but-finite values (seen in practice: passed a
-    // plain Number.isFinite check yet still failed) - crashing the whole
-    // app with an ugly dialog instead of just dropping the one bad update.
-    // No real desktop position is anywhere near this magnitude, so bound
-    // it outright rather than keep chasing the exact source.
-    const MAX_COORD = 20000;
-    const valid =
-      Number.isFinite(targetX) &&
-      Number.isFinite(targetY) &&
-      Math.abs(targetX) <= MAX_COORD &&
-      Math.abs(targetY) <= MAX_COORD;
-    if (!valid) {
-      console.error("[ipc] dropped out-of-range pet position", { x, y, targetX, targetY });
-      return;
+    // BrowserWindow.setPosition's native binding has thrown here even for
+    // values that pass Number.isFinite AND a generous magnitude check -
+    // whatever the exact trigger, it must never take the whole app down
+    // with an "Uncaught Exception" dialog over a single dropped move.
+    try {
+      getPetWindow()?.setPosition(targetX, targetY);
+    } catch (err) {
+      console.error("[ipc] setPosition threw - dropping this update", {
+        x,
+        y,
+        targetX,
+        targetY,
+        typeofX: typeof x,
+        typeofY: typeof y,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
-    getPetWindow()?.setPosition(targetX, targetY);
   });
 
   ipcMain.on(IpcChannel.PetSetIgnoreMouseEvents, (_event, ignore: boolean) => {

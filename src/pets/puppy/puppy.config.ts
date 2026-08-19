@@ -84,11 +84,15 @@ const STATE_SCALE: Partial<Record<PetState, number>> = {
   play: 1.25,
 };
 
+// Only the first 3 of the 6 source frames are used - the full 6-frame swing
+// read as an awkward, uneven tail wag; a shorter 1-2-3 flick looks cleaner.
+const PLAY_FRAME_COUNT = 3;
+
 // Per-base-frame horizontal correction for play (percent of canvas width) -
 // the source art's bounding box isn't centered consistently frame to frame
 // (the swinging tail drags it off), so nudge each frame back in line.
 // Ping-ponged below alongside the frames themselves to keep indices aligned.
-const PLAY_OFFSET_X_PERCENT: number[] = [10.2, 10.5, 10.2, 10.2, 11.3, 6.5];
+const PLAY_OFFSET_X_PERCENT: number[] = [10.2, 10.5, 10.2];
 
 const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
   name,
@@ -100,7 +104,7 @@ const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
       : name === "run"
         ? (RUN_FRAMES_BY_DIRECTION.E ?? [])
         : name === "play"
-          ? pingPong(framesFor(name))
+          ? pingPong(framesFor(name).slice(0, PLAY_FRAME_COUNT))
           : framesFor(name),
   fps: PUPPY_FPS_BY_STATE[name],
   loop: name !== "surprised",
