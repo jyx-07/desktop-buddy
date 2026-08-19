@@ -24,8 +24,8 @@ export const PUPPY_FPS_BY_STATE: Record<PetState, number> = {
   surprised: 1,
   lookAtCursor: 1,
   lookAround: 1,
-  // 11-frame ping-pong cycle (1..6..1) over ~4s.
-  play: 2.75,
+  // 11-frame ping-pong cycle (1..6..1), ~3x speed of a ~4s lap (just a tail wag).
+  play: 8.25,
   petted: 1,
   dragged: 1,
 };
