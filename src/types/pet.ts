@@ -39,6 +39,12 @@ export interface AnimationDefinition {
    * east-facing cycle that's really just the west-facing art flipped,
    * reusing one authored gait cycle for both directions. */
   mirrorByDirection?: Partial<Record<Direction, boolean>>;
+  /** Per-frame horizontal nudge, as a percent of the sprite canvas width
+   * (matches this state's `frames` array index-for-index) - corrects source
+   * art whose subject isn't centered consistently frame to frame (e.g. a
+   * swinging tail dragging the whole bounding box off-center) without
+   * touching the sprite pixels themselves. */
+  offsetXByFrame?: number[];
 }
 
 /**

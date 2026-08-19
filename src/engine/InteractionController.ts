@@ -18,7 +18,6 @@ const REACTION_PHRASES: Partial<Record<PetState, string[]>> = {
   surprised: ["앗!", "깜짝이야!", "엥?!"],
   happy: ["좋아!", "히히", "신난다!"],
   petted: ["음~ 좋다", "더 만져줘", "기분 좋아"],
-  sit: ["네!", "여기 앉을래"],
   lookAround: ["음?", "뭐지?"],
   play: ["같이 놀자!", "놀자!", "재밌다!"],
 };
@@ -59,7 +58,6 @@ export class InteractionController {
       { state: "surprised", weight: 20, durationMs: 500 },
       { state: "happy", weight: 15 + friendliness * 10, durationMs: 1200 },
       { state: "petted", weight: 15 + friendliness * 15, durationMs: 1400 },
-      { state: "sit", weight: 15, durationMs: 2000 },
       { state: "lookAround", weight: 10, durationMs: 1500 },
       { state: "play", weight: 10 + playfulness * 15, durationMs: 12000 }, // several loops of the play animation cycle
     ];

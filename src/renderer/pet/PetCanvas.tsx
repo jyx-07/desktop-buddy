@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 
 export interface PetCanvasHandle {
-  applyFrame(frameSrc: string | undefined, mirrored: boolean, scale: number): void;
+  applyFrame(frameSrc: string | undefined, mirrored: boolean, scale: number, offsetXPercent: number): void;
 }
 
 interface PetCanvasProps {
@@ -20,7 +20,7 @@ export const PetCanvas = forwardRef<PetCanvasHandle, PetCanvasProps>(function Pe
   const imgRef = useRef<HTMLImageElement>(null);
 
   useImperativeHandle(ref, () => ({
-    applyFrame(frameSrc, mirrored, scale) {
+    applyFrame(frameSrc, mirrored, scale, offsetXPercent) {
       const img = imgRef.current;
       if (!img) return;
       if (frameSrc && img.src !== frameSrc) img.src = frameSrc;
@@ -28,7 +28,10 @@ export const PetCanvas = forwardRef<PetCanvasHandle, PetCanvasProps>(function Pe
       // off the ground line - mirrors how the sprite sheet itself is
       // bottom-anchored.
       img.style.transformOrigin = "50% 100%";
-      img.style.transform = `scale(${mirrored ? -scale : scale}, ${scale})`;
+      // translateX first (in the frame's own original orientation), then
+      // scale/mirror - so a mirrored frame's offset flips direction along
+      // with it, still compensating correctly.
+      img.style.transform = `scale(${mirrored ? -scale : scale}, ${scale}) translateX(${offsetXPercent}%)`;
     },
   }));
 

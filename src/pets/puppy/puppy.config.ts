@@ -33,8 +33,8 @@ function framesFor(state: PetState): string[] {
 
 /** 1,2,3..n,n-1..2 - plays a cycle forward then back instead of snapping
  * from the last frame straight to the first. */
-function pingPong(frames: string[]): string[] {
-  return [...frames, ...frames.slice(0, -1).reverse()];
+function pingPong<T>(items: T[]): T[] {
+  return [...items, ...items.slice(0, -1).reverse()];
 }
 
 const DIRECTIONS: Direction[] = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
@@ -78,7 +78,14 @@ const STATE_SCALE: Partial<Record<PetState, number>> = {
   idle: 0.96,
   wake: 0.96,
   happy: 1.15,
+  play: 1.25,
 };
+
+// Per-base-frame horizontal correction for play (percent of canvas width) -
+// the source art's bounding box isn't centered consistently frame to frame
+// (the swinging tail drags it off), so nudge each frame back in line.
+// Ping-ponged below alongside the frames themselves to keep indices aligned.
+const PLAY_OFFSET_X_PERCENT: number[] = [10.2, 10.5, 10.2, 10.2, 11.3, 6.5];
 
 const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
   name,
@@ -95,6 +102,7 @@ const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
   fps: PUPPY_FPS_BY_STATE[name],
   loop: name !== "surprised",
   ...(STATE_SCALE[name] !== undefined ? { scale: STATE_SCALE[name] } : {}),
+  ...(name === "play" ? { offsetXByFrame: pingPong(PLAY_OFFSET_X_PERCENT) } : {}),
   ...(name === "walk"
     ? {
         framesByDirection: WALK_FRAMES_BY_DIRECTION,

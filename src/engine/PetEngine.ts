@@ -38,6 +38,8 @@ export interface PetSnapshot {
   scale: number;
   /** Whether the current frame should render horizontally flipped. */
   mirrored: boolean;
+  /** Per-frame horizontal nudge, percent of canvas width (0 = none). */
+  offsetXPercent: number;
   /** Current speech-bubble text, or null when the pet isn't saying anything. */
   speechText: string | null;
 }
@@ -191,6 +193,7 @@ export class PetEngine {
         isDragging: true,
         scale: this.animation.getCurrentScale(),
         mirrored: this.animation.getCurrentMirror(this.movement.getHorizontalBias()),
+        offsetXPercent: this.animation.getCurrentOffsetXPercent(),
         speechText: this.speech.current,
       };
     }
@@ -210,6 +213,7 @@ export class PetEngine {
         isDragging: false,
         scale: this.animation.getCurrentScale(),
         mirrored: this.animation.getCurrentMirror(this.movement.getHorizontalBias()),
+        offsetXPercent: this.animation.getCurrentOffsetXPercent(),
         speechText: this.speech.current,
       };
     }
@@ -224,6 +228,7 @@ export class PetEngine {
       isDragging: false,
       scale: this.animation.getCurrentScale(),
       mirrored: this.animation.getCurrentMirror(this.movement.getHorizontalBias()),
+      offsetXPercent: this.animation.getCurrentOffsetXPercent(),
       speechText: this.speech.current,
     };
   }

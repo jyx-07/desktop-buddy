@@ -42,7 +42,7 @@ export function PetRenderer() {
         lastTs = ts;
 
         const snapshot = engine.update(dt);
-        canvasRef.current?.applyFrame(snapshot.frameSrc, snapshot.mirrored, snapshot.scale);
+        canvasRef.current?.applyFrame(snapshot.frameSrc, snapshot.mirrored, snapshot.scale, snapshot.offsetXPercent);
 
         if (snapshot.speechText !== lastSpeech.current) {
           lastSpeech.current = snapshot.speechText;

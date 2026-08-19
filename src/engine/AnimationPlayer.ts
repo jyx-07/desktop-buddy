@@ -67,6 +67,12 @@ export class AnimationPlayer {
     return def.framesByDirection?.[this.direction] ?? def.frames;
   }
 
+  /** Horizontal nudge for the current frame, as a percent of canvas width (0 = none). */
+  getCurrentOffsetXPercent(): number {
+    const def = this.definitions.get(this.current);
+    return def?.offsetXByFrame?.[this.frameIndex] ?? 0;
+  }
+
   update(dtMs: number) {
     const def = this.definitions.get(this.current);
     if (!def) return;
