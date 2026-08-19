@@ -28,12 +28,6 @@ export function MainSettingsPage({ config, onChange }: MainSettingsPageProps) {
       <Section title="기본 설정">
         <TextField label="이름" value={config.name} onChange={(name) => onChange({ name })} placeholder="펫 이름" />
         <Slider
-          leftLabel="작게"
-          rightLabel="크게"
-          value={(config.appearance.scale - 1) / 2}
-          onChange={(v) => onChange({ appearance: { scale: 1 + v * 2 } })}
-        />
-        <Slider
           leftLabel="느리게"
           rightLabel="빠르게"
           value={(config.moveSpeed - 0.5) / 1.5}

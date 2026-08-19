@@ -9,10 +9,9 @@ import type { PetState, Personality } from "../../types/pet";
 export const PUPPY_FRAME_SIZE = { width: 353, height: 277 };
 
 // The sliced sprite art isn't native 1x pixel-art grid resolution (it came
-// from a raster reference sheet), so "scale" multiplies this display height
-// rather than the raw asset pixel size - keeps the pet a believably small
-// creature on screen instead of ballooning to hundreds of real pixels tall.
-export const PUPPY_DISPLAY_BASE_HEIGHT = 110;
+// from a raster reference sheet), so this is the pet's fixed on-screen
+// height rather than the raw asset pixel size - not user-adjustable.
+export const PUPPY_DISPLAY_BASE_HEIGHT = 170;
 
 export const PUPPY_FPS_BY_STATE: Record<PetState, number> = {
   idle: 1,

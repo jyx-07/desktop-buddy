@@ -72,12 +72,6 @@ export class MovementEngine {
     this.bounds = bounds;
   }
 
-  /** Called when the user changes the size slider - keeps the walkable
-   * area matching the window's actual (now-resized) footprint. */
-  setFrameSize(frameSize: { width: number; height: number }) {
-    this.frameSize = frameSize;
-  }
-
   setSpeedMultiplier(multiplier: number) {
     this.speedMultiplier = multiplier;
   }

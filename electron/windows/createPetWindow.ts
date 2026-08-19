@@ -6,15 +6,15 @@ import type { PetConfig } from "../../src/types/pet";
 
 const isDev = process.env.NODE_ENV === "development";
 
-export function petWindowSize(scale: number) {
-  return computeDisplaySize(
-    { frameSize: PUPPY_FRAME_SIZE, displayBaseHeight: PUPPY_DISPLAY_BASE_HEIGHT },
-    scale,
-  );
+export function petWindowSize() {
+  return computeDisplaySize({
+    frameSize: PUPPY_FRAME_SIZE,
+    displayBaseHeight: PUPPY_DISPLAY_BASE_HEIGHT,
+  });
 }
 
 export function createPetWindow(config: PetConfig): BrowserWindow {
-  const { width, height } = petWindowSize(config.appearance.scale);
+  const { width, height } = petWindowSize();
   const workArea = screen.getPrimaryDisplay().workArea;
 
   const win = new BrowserWindow({

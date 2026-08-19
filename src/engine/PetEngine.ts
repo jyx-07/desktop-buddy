@@ -34,12 +34,10 @@ export class PetEngine {
   private drag = new DragController();
   private paused = false;
   private draggingEnabled = true;
-  private definition: PetDefinition;
 
   constructor(definition: PetDefinition, config: PetConfig, bounds: WorkArea) {
-    this.definition = definition;
     this.animation = new AnimationPlayer(definition.animations, "idle");
-    const displaySize = computeDisplaySize(definition, config.appearance.scale);
+    const displaySize = computeDisplaySize(definition);
     // Spawn grounded, matching exactly how createPetWindow.ts places the
     // window itself - otherwise the first tick's position report snaps the
     // window from the floor up to config.position's raw (x, y) on launch.
@@ -78,7 +76,6 @@ export class PetEngine {
     this.interaction.updateConfig(config);
     this.rules.updateConfig(config);
     this.movement.setSpeedMultiplier(config.moveSpeed);
-    this.movement.setFrameSize(computeDisplaySize(this.definition, config.appearance.scale));
     this.draggingEnabled = config.behavior.dragging;
   }
 

@@ -6,7 +6,6 @@ export function createDefaultPetConfig(): PetConfig {
     name: "콩이",
     appearance: {
       type: "puppy",
-      scale: 1,
     },
     position: {
       x: 200,

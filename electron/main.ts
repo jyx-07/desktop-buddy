@@ -1,6 +1,6 @@
 import { app, screen, powerMonitor, BrowserWindow } from "electron";
 import { ConfigStore } from "../src/config/ConfigStore";
-import { createPetWindow, petWindowSize } from "./windows/createPetWindow";
+import { createPetWindow } from "./windows/createPetWindow";
 import { getSettingsWindow } from "./windows/createSettingsWindow";
 import { createTray } from "./tray";
 import { registerIpcHandlers } from "./ipc";
@@ -46,22 +46,6 @@ app.whenReady().then(() => {
       timeOfDay: { hour: now.getHours(), minute: now.getMinutes() },
     });
   }, 1000);
-
-  // Keep the window's on-screen size in sync when the user changes the
-  // "size" slider in Settings, without requiring a restart.
-  configStore.onChange((config) => {
-    if (!petWindow || petWindow.isDestroyed()) return;
-    const { width, height } = petWindowSize(config.appearance.scale);
-    const bounds = petWindow.getBounds();
-    if (bounds.width === width && bounds.height === height) return;
-    const workArea = screen.getPrimaryDisplay().workArea;
-    petWindow.setBounds({
-      x: bounds.x,
-      y: workArea.y + workArea.height - height,
-      width,
-      height,
-    });
-  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
