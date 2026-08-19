@@ -66,6 +66,7 @@ const STATE_SCALE: Partial<Record<PetState, number>> = {
   idle: 0.96,
   wake: 0.96,
   happy: 1.15,
+  play: 1.28,
 };
 
 const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
