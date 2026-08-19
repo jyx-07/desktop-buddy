@@ -23,10 +23,19 @@ export function registerIpcHandlers({ configStore, getPetWindow, getSettingsWind
     const targetX = Math.round(x);
     const targetY = Math.round(y - SPEECH_HEADROOM_PX);
     // BrowserWindow.setPosition throws a native TypeError on NaN/Infinity -
-    // crashing the whole app with an ugly dialog instead of just dropping
-    // the one bad update. Guard rather than chase every possible NaN source.
-    if (!Number.isFinite(targetX) || !Number.isFinite(targetY)) {
-      console.error("[ipc] dropped non-finite pet position", { x, y });
+    // AND on merely huge-but-finite values (seen in practice: passed a
+    // plain Number.isFinite check yet still failed) - crashing the whole
+    // app with an ugly dialog instead of just dropping the one bad update.
+    // No real desktop position is anywhere near this magnitude, so bound
+    // it outright rather than keep chasing the exact source.
+    const MAX_COORD = 20000;
+    const valid =
+      Number.isFinite(targetX) &&
+      Number.isFinite(targetY) &&
+      Math.abs(targetX) <= MAX_COORD &&
+      Math.abs(targetY) <= MAX_COORD;
+    if (!valid) {
+      console.error("[ipc] dropped out-of-range pet position", { x, y, targetX, targetY });
       return;
     }
     getPetWindow()?.setPosition(targetX, targetY);
