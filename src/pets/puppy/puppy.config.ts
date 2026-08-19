@@ -50,6 +50,12 @@ function framesByDirectionFor(state: "walk" | "run"): Partial<Record<Direction, 
 const WALK_FRAMES_BY_DIRECTION = framesByDirectionFor("walk");
 const RUN_FRAMES_BY_DIRECTION = framesByDirectionFor("run");
 
+// East run art reuses the West cycle, mirrored at render time (see
+// `mirrorByDirection` below) rather than keeping separately-authored art.
+if (RUN_FRAMES_BY_DIRECTION.W) {
+  RUN_FRAMES_BY_DIRECTION.E = RUN_FRAMES_BY_DIRECTION.W;
+}
+
 // States that don't have dedicated art yet reuse an existing pose - just a
 // distinct entry in the state machine, not a real asset folder.
 const REUSED_STATE_FRAMES: Partial<Record<PetState, PetState>> = {
@@ -90,7 +96,12 @@ const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
         scaleByDirection: { W: 1.21 },
       }
     : {}),
-  ...(name === "run" ? { framesByDirection: RUN_FRAMES_BY_DIRECTION } : {}),
+  ...(name === "run"
+    ? {
+        framesByDirection: RUN_FRAMES_BY_DIRECTION,
+        mirrorByDirection: { E: true },
+      }
+    : {}),
 }));
 
 for (const [state, reuseFrom] of Object.entries(REUSED_STATE_FRAMES) as [PetState, PetState][]) {

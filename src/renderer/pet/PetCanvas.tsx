@@ -1,13 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
-import type { PetState } from "../../types/pet";
 
 export interface PetCanvasHandle {
-  applyFrame(
-    frameSrc: string | undefined,
-    state: PetState,
-    horizontalBias: "left" | "right",
-    scale: number,
-  ): void;
+  applyFrame(frameSrc: string | undefined, mirrored: boolean, scale: number): void;
 }
 
 interface PetCanvasProps {
@@ -15,12 +9,6 @@ interface PetCanvasProps {
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }
-
-// walk/run/idle each have real art for every direction already, so they
-// never need mirroring. Everything else is a single reused pose (sleep,
-// sit, happy, ...) that only makes sense facing one way in the source art -
-// mirror those based on which way the pet was last actually heading.
-const DIRECTIONAL_STATES = new Set<PetState>(["walk", "run", "idle"]);
 
 // Pure imperative sprite surface: PetRenderer's rAF loop calls applyFrame()
 // directly on this ref every tick, bypassing React state/re-render entirely
@@ -32,11 +20,10 @@ export const PetCanvas = forwardRef<PetCanvasHandle, PetCanvasProps>(function Pe
   const imgRef = useRef<HTMLImageElement>(null);
 
   useImperativeHandle(ref, () => ({
-    applyFrame(frameSrc, state, horizontalBias, scale) {
+    applyFrame(frameSrc, mirrored, scale) {
       const img = imgRef.current;
       if (!img) return;
       if (frameSrc && img.src !== frameSrc) img.src = frameSrc;
-      const mirrored = !DIRECTIONAL_STATES.has(state) && horizontalBias === "left";
       // Anchor at bottom-center so a scale correction never lifts the feet
       // off the ground line - mirrors how the sprite sheet itself is
       // bottom-anchored.

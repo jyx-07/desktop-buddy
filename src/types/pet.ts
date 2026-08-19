@@ -35,6 +35,10 @@ export interface AnimationDefinition {
   /** Per-direction override of `scale`, for states (walk/run) whose gait
    * cycle was extracted at an inconsistent scale between directions. */
   scaleByDirection?: Partial<Record<Direction, number>>;
+  /** Directions whose frames should render horizontally mirrored - e.g. an
+   * east-facing cycle that's really just the west-facing art flipped,
+   * reusing one authored gait cycle for both directions. */
+  mirrorByDirection?: Partial<Record<Direction, boolean>>;
 }
 
 /**

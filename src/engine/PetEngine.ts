@@ -26,14 +26,13 @@ export interface PetSnapshot {
   x: number;
   y: number;
   facing: Direction;
-  /** Last non-ambiguous horizontal heading - used to mirror the single-pose
-   * states (sleep, sit, ...) that don't have their own 8-direction art. */
-  horizontalBias: "left" | "right";
   frameSrc: string | undefined;
   state: PetState;
   isDragging: boolean;
   /** Render-time size correction for the current pose (1 = none). */
   scale: number;
+  /** Whether the current frame should render horizontally flipped. */
+  mirrored: boolean;
   /** Current speech-bubble text, or null when the pet isn't saying anything. */
   speechText: string | null;
 }
@@ -182,11 +181,11 @@ export class PetEngine {
         x: pos.x,
         y: pos.y,
         facing,
-        horizontalBias: this.movement.getHorizontalBias(),
         frameSrc: this.animation.getCurrentFrameSrc(),
         state: this.animation.state,
         isDragging: true,
         scale: this.animation.getCurrentScale(),
+        mirrored: this.animation.getCurrentMirror(this.movement.getHorizontalBias()),
         speechText: this.speech.current,
       };
     }
@@ -201,11 +200,11 @@ export class PetEngine {
         x: moveResult.x,
         y: moveResult.y,
         facing: moveResult.facing,
-        horizontalBias: this.movement.getHorizontalBias(),
         frameSrc: this.animation.getCurrentFrameSrc(),
         state: this.animation.state,
         isDragging: false,
         scale: this.animation.getCurrentScale(),
+        mirrored: this.animation.getCurrentMirror(this.movement.getHorizontalBias()),
         speechText: this.speech.current,
       };
     }
@@ -215,11 +214,11 @@ export class PetEngine {
       x: pos.x,
       y: pos.y,
       facing: this.movement.getFacing(),
-      horizontalBias: this.movement.getHorizontalBias(),
       frameSrc: this.animation.getCurrentFrameSrc(),
       state: this.animation.state,
       isDragging: false,
       scale: this.animation.getCurrentScale(),
+      mirrored: this.animation.getCurrentMirror(this.movement.getHorizontalBias()),
       speechText: this.speech.current,
     };
   }

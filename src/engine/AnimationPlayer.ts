@@ -1,5 +1,10 @@
 import type { AnimationDefinition, Direction, PetState } from "../types/pet";
 
+// States with real per-direction art. Everything else is a single pose that
+// only makes sense facing one way in its source art, so it mirrors off the
+// pet's last horizontal heading instead (see getCurrentMirror below).
+const DIRECTIONAL_STATES = new Set<PetState>(["walk", "run", "idle"]);
+
 /** "Which frame should be on screen right now" - nothing else. */
 export class AnimationPlayer {
   private definitions: Map<PetState, AnimationDefinition>;
@@ -45,6 +50,17 @@ export class AnimationPlayer {
     const def = this.definitions.get(this.current);
     if (!def) return 1;
     return def.scaleByDirection?.[this.direction] ?? def.scale ?? 1;
+  }
+
+  /** Whether the current frame should render horizontally flipped - either a
+   * directional state's explicit mirrorByDirection (e.g. run facing east
+   * reusing the west cycle), or a single-pose state mirrored off the pet's
+   * last horizontal heading. */
+  getCurrentMirror(horizontalBias: "left" | "right"): boolean {
+    const def = this.definitions.get(this.current);
+    if (def?.mirrorByDirection?.[this.direction]) return true;
+    if (DIRECTIONAL_STATES.has(this.current)) return false;
+    return horizontalBias === "left";
   }
 
   private activeFrames(def: AnimationDefinition): string[] {
