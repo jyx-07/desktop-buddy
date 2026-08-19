@@ -28,6 +28,13 @@ export interface AnimationDefinition {
   framesByDirection?: Partial<Record<Direction, string[]>>;
   fps: number;
   loop: boolean;
+  /** Render-time size correction (1 = as-authored) - lets poses whose source
+   * art reads visually smaller/larger than the rest be normalized without
+   * touching the sprite pixels themselves. */
+  scale?: number;
+  /** Per-direction override of `scale`, for states (walk/run) whose gait
+   * cycle was extracted at an inconsistent scale between directions. */
+  scaleByDirection?: Partial<Record<Direction, number>>;
 }
 
 /**

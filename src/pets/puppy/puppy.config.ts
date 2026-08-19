@@ -59,6 +59,15 @@ const REUSED_STATE_FRAMES: Partial<Record<PetState, PetState>> = {
   dragged: "surprised",
 };
 
+// Render-time size correction, applied on top of the sprite pixels rather
+// than by editing them - some poses' source art simply reads visually
+// smaller/larger than the rest at the same on-screen frame size.
+const STATE_SCALE: Partial<Record<PetState, number>> = {
+  idle: 0.96,
+  wake: 0.96,
+  happy: 1.15,
+};
+
 const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
   name,
   // Fall back to the east-facing cycle so an unexpected direction never
@@ -71,12 +80,27 @@ const animations: AnimationDefinition[] = PUPPY_STATES.map((name) => ({
         : framesFor(name),
   fps: PUPPY_FPS_BY_STATE[name],
   loop: name !== "surprised",
-  ...(name === "walk" ? { framesByDirection: WALK_FRAMES_BY_DIRECTION } : {}),
+  ...(STATE_SCALE[name] !== undefined ? { scale: STATE_SCALE[name] } : {}),
+  ...(name === "walk"
+    ? {
+        framesByDirection: WALK_FRAMES_BY_DIRECTION,
+        // Walking west was extracted at a visibly smaller scale than every
+        // other direction - bring it back in line with the rest of the cycle.
+        scaleByDirection: { W: 1.21 },
+      }
+    : {}),
   ...(name === "run" ? { framesByDirection: RUN_FRAMES_BY_DIRECTION } : {}),
 }));
 
 for (const [state, reuseFrom] of Object.entries(REUSED_STATE_FRAMES) as [PetState, PetState][]) {
-  animations.push({ name: state, frames: framesFor(reuseFrom), fps: 1, loop: true });
+  const scale = STATE_SCALE[reuseFrom];
+  animations.push({
+    name: state,
+    frames: framesFor(reuseFrom),
+    fps: 1,
+    loop: true,
+    ...(scale !== undefined ? { scale } : {}),
+  });
 }
 
 // PetConfig.ts's createDefaultPetConfig() is the one source of truth for

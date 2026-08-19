@@ -40,6 +40,13 @@ export class AnimationPlayer {
     return this.finished;
   }
 
+  /** Render-time size correction for the current state/direction (1 = none). */
+  getCurrentScale(): number {
+    const def = this.definitions.get(this.current);
+    if (!def) return 1;
+    return def.scaleByDirection?.[this.direction] ?? def.scale ?? 1;
+  }
+
   private activeFrames(def: AnimationDefinition): string[] {
     return def.framesByDirection?.[this.direction] ?? def.frames;
   }

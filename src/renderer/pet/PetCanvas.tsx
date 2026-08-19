@@ -2,7 +2,12 @@ import { forwardRef, useImperativeHandle, useRef } from "react";
 import type { PetState } from "../../types/pet";
 
 export interface PetCanvasHandle {
-  applyFrame(frameSrc: string | undefined, state: PetState, horizontalBias: "left" | "right"): void;
+  applyFrame(
+    frameSrc: string | undefined,
+    state: PetState,
+    horizontalBias: "left" | "right",
+    scale: number,
+  ): void;
 }
 
 interface PetCanvasProps {
@@ -27,12 +32,16 @@ export const PetCanvas = forwardRef<PetCanvasHandle, PetCanvasProps>(function Pe
   const imgRef = useRef<HTMLImageElement>(null);
 
   useImperativeHandle(ref, () => ({
-    applyFrame(frameSrc, state, horizontalBias) {
+    applyFrame(frameSrc, state, horizontalBias, scale) {
       const img = imgRef.current;
       if (!img) return;
       if (frameSrc && img.src !== frameSrc) img.src = frameSrc;
-      img.style.transform =
-        !DIRECTIONAL_STATES.has(state) && horizontalBias === "left" ? "scaleX(-1)" : "scaleX(1)";
+      const mirrored = !DIRECTIONAL_STATES.has(state) && horizontalBias === "left";
+      // Anchor at bottom-center so a scale correction never lifts the feet
+      // off the ground line - mirrors how the sprite sheet itself is
+      // bottom-anchored.
+      img.style.transformOrigin = "50% 100%";
+      img.style.transform = `scale(${mirrored ? -scale : scale}, ${scale})`;
     },
   }));
 

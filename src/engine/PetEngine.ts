@@ -18,6 +18,8 @@ export interface PetSnapshot {
   frameSrc: string | undefined;
   state: PetState;
   isDragging: boolean;
+  /** Render-time size correction for the current pose (1 = none). */
+  scale: number;
 }
 
 /**
@@ -156,6 +158,7 @@ export class PetEngine {
         frameSrc: this.animation.getCurrentFrameSrc(),
         state: this.animation.state,
         isDragging: true,
+        scale: this.animation.getCurrentScale(),
       };
     }
 
@@ -173,6 +176,7 @@ export class PetEngine {
         frameSrc: this.animation.getCurrentFrameSrc(),
         state: this.animation.state,
         isDragging: false,
+        scale: this.animation.getCurrentScale(),
       };
     }
 
@@ -185,6 +189,7 @@ export class PetEngine {
       frameSrc: this.animation.getCurrentFrameSrc(),
       state: this.animation.state,
       isDragging: false,
+      scale: this.animation.getCurrentScale(),
     };
   }
 }

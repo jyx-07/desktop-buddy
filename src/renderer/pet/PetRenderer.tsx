@@ -40,7 +40,7 @@ export function PetRenderer() {
         lastTs = ts;
 
         const snapshot = engine.update(dt);
-        canvasRef.current?.applyFrame(snapshot.frameSrc, snapshot.state, snapshot.horizontalBias);
+        canvasRef.current?.applyFrame(snapshot.frameSrc, snapshot.state, snapshot.horizontalBias, snapshot.scale);
 
         if (snapshot.x !== lastSent.current.x || snapshot.y !== lastSent.current.y) {
           lastSent.current = { x: snapshot.x, y: snapshot.y };
